@@ -82,9 +82,6 @@ df['Age'] = df['Age'].map(lambda x: 'Young' if x<=9 else 'Old')
 df.drop(columns='Rings')
 df = df[['Age','Sex','Length','Diameter','Height','Whole Weight', 'Shucked Weight','Viscera Weight','Shell Weight']]
 
-print(df[df.Age=='Old'].shape)
-print(df[df.Age=='Young'].shape)
-
 #Induction
 X = df.values[:, 1:9]
 Y = df.values[:,0]
