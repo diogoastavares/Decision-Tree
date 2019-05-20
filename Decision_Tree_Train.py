@@ -16,7 +16,7 @@ def convertSex():
 
 def multiply_by_Scalar(conv_array, scalar):
     for i in conv_array:
-        df[i] = df[i].apply(lambda x: x*scalar*255/65535)
+        df[i] = df[i].apply(lambda x: x*scalar)
 
 def treat_data():
     global df
