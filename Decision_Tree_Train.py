@@ -16,12 +16,12 @@ def convertSex():
 
 def multiply_by_Scalar(conv_array, scalar):
     for i in conv_array:
-        df[i] = df[i].apply(lambda x: x*scalar)
+        df[i] = df[i].apply(lambda x: x*scalar*255/65535)
 
 def treat_data():
     global df
     df.round()
-    df=df.apply(np.int64)
+    df=df.apply(np.int8)
 
 def prune(tree):
     dat = tree.tree_
@@ -53,22 +53,19 @@ df = df[df.Height < 0.4]
 df = df[df.Rings >= 3]
 df = df[df.Rings <= 22]
 
+
 #Standardization
 '''
 for label in ['Length','Diameter','Height','Whole Weight', 'Shucked Weight','Viscera Weight','Shell Weight']:
     df[label] = df[label].apply(lambda x: abs(x-df[label].mean())/df[label].std())
-
 '''
+
 #Normalization 
+
 for label in ['Length','Diameter','Height','Whole Weight', 'Shucked Weight','Viscera Weight','Shell Weight']:
     df[label] = df[label].apply(lambda x: abs(x-(df[label].mean()/(df[label].max()-df[label].min()))))
 
-'''	
-sns.set(style="ticks", color_codes=True)
-sns.pairplot(df, vars=df.columns[1:-1],hue='Rings')
-plt.show()
-	
-'''
+
 #Convert Data
 convertSex()
 multiply_by_Scalar(['Length','Diameter','Height','Whole Weight', 'Shucked Weight','Viscera Weight','Shell Weight'], 10000)
@@ -79,8 +76,9 @@ plt.show()
 df['Age']= df.Rings
 df['Age'] = df['Age'].map(lambda x: 'Young' if x<=9 else 'Old')
 
-df.drop(columns='Rings')
+df=df.drop(columns='Rings')
 df = df[['Age','Sex','Length','Diameter','Height','Whole Weight', 'Shucked Weight','Viscera Weight','Shell Weight']]
+
 
 #Induction
 X = df.values[:, 1:9]
@@ -103,7 +101,7 @@ print ("Accuracy is ", accuracy_score(y_test,y_pred)*100)
 CM=confusion_matrix(y_test,y_pred)
 print("Accuracy with Confusion Matrix ", (CM.trace())/(CM.sum())*100)
 
-dot_data = tree.export_graphviz(model, out_file='tree.dot', feature_names=['Sex','Length','Diameter','Height','Whole Weight', 'Shucked Weight','Viscera Weight','Shell Weight'], label= 'None', class_names=df.Age, filled=False, rounded=False, special_characters=False)
+dot_data = tree.export_graphviz(model, out_file='tree_8bit.dot', feature_names=['Sex','Length','Diameter','Height','Whole Weight', 'Shucked Weight','Viscera Weight','Shell Weight'], label= 'None', class_names=df.Age, filled=False, rounded=False, special_characters=False)
 
 #Pruning
 prunedTree= prune(model)
@@ -115,4 +113,10 @@ print ("Pruned Accuracy is ", accuracy_score(y_test,pruned_y_pred)*100)
 pruned_CM=confusion_matrix(y_test,pruned_y_pred)
 print("Pruned Accuracy with Confusion Matrix ", (pruned_CM.trace())/(pruned_CM.sum())*100)
 
-pruned_dot_data = tree.export_graphviz(prunedTree, out_file='pruned_tree.dot', feature_names=['Sex','Length','Diameter','Height','Whole Weight', 'Shucked Weight','Viscera Weight','Shell Weight'], label= 'None', class_names=df.Age, filled=False, rounded=False, special_characters=False)
+pruned_dot_data = tree.export_graphviz(prunedTree, out_file='pruned_tree_8bit.dot', feature_names=['Sex','Length','Diameter','Height','Whole Weight', 'Shucked Weight','Viscera Weight','Shell Weight'], label= 'None', class_names=df.Age, filled=False, rounded=False, special_characters=False)
+
+X_test_frame=pd.DataFrame(data=X_test, columns=['Sex','Length','Diameter','Height','Whole Weight', 'Shucked Weight','Viscera Weight','Shell Weight'])
+Y_test_frame=pd.DataFrame(data=np.array(y_test), columns=['Age'])
+test_data=pd.concat([Y_test_frame,X_test_frame], axis=1)
+print (test_data)
+test_data.to_csv('test_data_decision_tree_8bit.csv', sep = ',')
